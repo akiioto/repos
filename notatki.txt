@@ -1,0 +1,197 @@
+
+
+1. Nadawanie praw:
+	- grant select on [nazwa] to [user];
+	
+2. Kopiowanie tabel:
+	- create table [nazwa] as select [atrybuty/*] from [tabela];
+	
+3. Tworzenie tabeli:
+	- create table [nazwa]
+		(
+			atr1 typ_1,
+			atr2 typ_2,
+			...
+			atrn, typ_n
+		);
+		
+4. Usuwanie tabeli:
+	- drop table [nazwa] cascade constraints;
+	
+5. Modyfikowanie tabeli:
+	- dodanie kolumny:
+		alter table [nazwa] add [nazwa_kolumny] [typ] /default value;
+	- dodanie klucza glownego:
+		alter table add constraint [nazwa wiezu] primary key([atrybut not null]);
+	- dodanie klucza obcego:
+		alter table add constraint [nazwa wiezu] foreign key([atrybut]) references inna_tabela([wartosc]);
+
+6. Dodawanie do tabeli:
+	- insert into [nazwa] values(val1, val2, ...);
+
+7. Modyfikowanie istniejacych wartosci:
+	- update [nazwa] set [atrybut]=[wartosc] where {warunek boolowski};
+
+8. Usuwanie wartosci z tabeli:
+	- delete from [nazwa] where [atrybut]=[wartosc];
+
+9. Unia - logiczna suma atrybutów
+	- select 1 as a ,2 as b, 3 as c from dual union all select 3,4,5 from dual; -- da 3 atrybuty a={1,3}, b={2,4}, c={3,5};
+
+10. Sekwencje:
+	- tworzenie:
+		create sequence [name] \start with \[value] \increment by \[value];
+			-- jesli bedzie bez dodatkow (\), to bedzie inkrementowana od 1, co 1
+	- usuwanie
+		drop sequence [name]
+
+11. PL/SQL podstawy:
+	- składnia:
+		DECLARE
+			var_1 type_1,
+			var_2 type_2,
+			...,
+			var_n type_n \default [value]
+		BEGIN
+			{DO SOMETHING}
+		END;
+		/ -- koniecznie 
+	
+	- wstawianie wartosci z tabeli do zmiennej:
+		select atrybut into zmienna from tabela;
+		
+	- wstawianie wartosci z zmiennej do tabeli:
+		insert into tabela values(zmienna);
+		
+	- wyswietlanie wynikow:
+		SET SERVEROUTPUT ON;
+		DBMS_OUTPUT.PUT_LINE([string] || [integer] || [whatever]);
+		
+	- petle:
+		* while:
+			DECLARE
+				idx INTEGER DEFAULT 0;
+				n INTEGER DEFAULT 30;
+			BEGIN
+				WHILE idx < n LOOP
+					DBMS_OUTPUT.PUT_LINE(idx);
+					idx:=idx+1;
+				END LOOP;
+			END;
+		* quasi do-while:
+			DECLARE
+				idx INTEGER DEFAULT 0;
+				n INTEGER DEFAULT 30;
+			BEGIN
+				LOOP
+					DBMS_OUTPUT.PUT_LINE(idx);
+					idx:=idx+1;
+				EXIT WHEN idx >= n;
+				END LOOP;
+			END;
+		* for:
+			DECLARE 
+				n INTEGER DEFAULT 30;
+			BEGIN
+				FOR i in 1..n LOOP
+					DBMS_OUTPUT.PUT_LINE(i);
+				END LOOP;
+			END;
+			
+	- instrukcje warunkowe:
+		DECLARE
+			id tabela.atrybut%type;
+		BEGIN
+			SELECT atrybut INTO id from tabela; --dodawanie wartosci z tabeli do zmiennej
+			IF atrybut <>, <, >, = [val] THEN
+				{instrukcje}
+			ELSIF atrybut <>,<,>,- [val2] THEN
+				{instrukcje}
+			ELSE
+				{instrukcje}
+			END IF;
+		END;
+		
+	- wyjatki:
+		* user-defined:
+			DECLARE 
+				my_exc exception;
+			BEGIN
+				RAISE my_exc;
+			EXCEPTION 
+				WHEN my_exc THEN
+					RAISE_APPLICATION_ERROR(-20001, 'well, fuck you, that's why');
+			END;
+		* not-user-defined:
+			- OTHERS 
+			- TOO_MANY_ROWS
+			- NO_DATA_FOUND
+			- ZERO_DIVIDE
+			
+12. Funkcje:
+	   - FUNCTION [NAME](arg_1 type_1, ..., arg_n type_n) RETURN type_r
+			IS
+				{deklaracja zmiennych, funkcji, procedur, kursorow}
+				ret type_r;
+			BEGIN
+				{DO SOMETHING}
+				RETURN ret;
+			END;
+		
+13. Procedury:
+		- PROCEDURE [NAME](arg_1 type_1, ..., arg_n type_n) 
+			IS
+				{deklaracja zmiennych, etc.}
+			BEGIN
+				{do something}
+			END;
+
+UWAGA 12,13 - funkcje w skrypcie musza byc podane w polu declare, w przeciwnym wypadku
+			(mają być na bazie) należy je poprzedzić tekstem:
+			CREATE OR REPLACE FUNCTION/PROCEDURE, a IS na AS, przykładowo
+			
+			* 	CREATE OR REPLACE PROCEDURE (text varchar) 
+					AS
+						BEGIN
+							DBMS_OUTPUT.PUT_LINE(text);
+						END;
+						/
+14. Kursory - takie cuś do pobierania wartosci z tabeli:
+	 - musi istnieć pole dotyczące rekordu z tabeli:
+		X tabela%ROWTYPE;
+	 - deklaracja kursora musi mieć miejsce w polu declare:
+		DECLARE 
+			CURSOR [name] is select * from tabela;
+		BEGIN
+			-- jesli nie bedzie petli for (FOR X in [name] loop)
+			OPEN [name];
+			FETCH [name] INTO X;
+			CLOSE [name];
+		END;
+
+15. Triggery - procedury, ktore zostaja uruchomione w momencie "wyzwalajacego"
+	zdarzenia, budowa:
+		CREATE OR REPLACE TRIGGER [nazwa]
+		BEFORE (OR)/AFTER (OR)/INSTEAD OF   INSERT/DELETE/UPDATE ON tabela/widok
+		--FOR EACH ROW --jesli ma byc dla kazdego usuwanej, updatowanej kolumny
+			DECLARE
+				{jakas deklaracja}
+			BEGIN
+				--zmiana starej zmiennej
+				:OLD.[atrybut z tabeli]:=10;
+				
+				--zmiana nowej zmiennej
+				:NEW.[atrybut z tabeli]:=10;
+				
+				--if posiada tu magie:
+				if updating then
+				{do something}
+				
+				elsif deleting then
+				{do something}
+				
+				elsif updating
+				{do something}
+			
+	
+		
